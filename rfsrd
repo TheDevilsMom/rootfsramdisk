@@ -1,12 +1,12 @@
 #!/bin/bash
 # configuration begins
-# tmpfs size in MiB
+# tmpfs size in MiB. Change this, especially on low mem systems (<32 GiB) without swap to avoid OOM
 size=24576
-# MD device
+# MD device. Change this.
 md=/dev/md127
-# SSD/HDD device
+# SSD/HDD device. Change this.
 ssdhdd=/dev/nvme0n1p2
-# loop device
+# loop device. Change this, if there's something else occupying /dev/loop0.
 loopdevice=/dev/loop0
 # configuration ends
 
