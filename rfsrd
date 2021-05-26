@@ -1,0 +1,63 @@
+#!/bin/bash
+# configuration begins
+# tmpfs size in MiB
+size=24576
+# MD device
+md=/dev/md127
+# SSD/HDD device
+ssdhdd=/dev/nvme0n1p2
+# loop device
+loopdevice=/dev/loop0
+# configuration ends
+
+i=0
+while [ $i -lt 1 ]; do
+	case $1 in
+		--help)
+		echo Usage: rfsrd --start
+		echo "       Rebuilds RAMdisk and halts SSD/HDD."
+		echo "       rfsrd --stop"
+		echo "       Rebuilds SSD/HDD and halts RAMdisk."
+		let i=i+1
+		;;
+		--start)
+		echo Rebuilding RAMdisk.
+		mount -t tmpfs -o size=$size'M' tmpfs /mnt/tmpfs/ && cd /mnt/tmpfs/ && dd if=/dev/zero of=loop bs=1M; losetup $loopdevice /mnt/tmpfs/loop
+		mdadm --manage -a $md $loopdevice
+		j=0
+			while [ $j -lt 1 ]; do
+				mdadm -D $md | grep "Rebuild Status"
+				sleep 5
+					if [ -z "$(mdadm -D $md | grep 'Rebuild Status')" ]; then
+						mdadm -f $md $ssdhdd; mdadm --manage -r $md $ssdhdd
+						let j=j+1
+					else
+						echo "doing nothing" > /dev/null
+					fi
+			done
+		echo Done rebuilding RAMdisk.
+		let i=i+1
+		;;
+		--stop)
+		echo Rebuilding SSD/HDD.
+		mdadm --manage -a $md $ssdhdd
+		k=0
+			while [ $k -lt 1 ]; do
+				mdadm -D $md | grep "Rebuild Status"
+				sleep 5
+					if [ -z "$(mdadm -D $md | grep 'Rebuild Status')" ]; then
+						mdadm -f $md $loopdevice; mdadm --manage -r $md $loopdevice
+						let k=k+1
+					else
+						echo "doing nothing" > /dev/null
+					fi
+			done
+		echo Done rebuilding SSD/HDD.
+		let i=i+1
+		;;
+		*)
+		echo "Invalid argument, run rfsrd --help for more info."
+		let i=i+1
+	esac
+	sleep 0.1
+done
