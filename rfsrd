@@ -1,23 +1,29 @@
 #!/bin/bash
-# configuration begins
+# Copyright (c) 2021 TheDevilsMom
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+# Configuration begins (example).
 # tmpfs size in MiB. Change this, especially on low mem systems (<32 GiB) without swap to avoid OOM
 size=24576
 # MD device. Change this.
 md=/dev/md127
-# SSD/HDD device. Change this.
+# Non-volatile block device holding the root filesystem. Change this (e.g. /dev/sda2).
 ssdhdd=/dev/nvme0n1p2
-# loop device. Change this, if there's something else occupying /dev/loop0.
+# Loop device. Change this, if there's something else occupying /dev/loop0.
 loopdevice=/dev/loop0
-# configuration ends
+# Configuration ends.
 
 i=0
 while [ $i -lt 1 ]; do
 	case $1 in
 		--help)
-		echo Usage: rfsrd --start
+		echo "Usage: rfsrd --start"
 		echo "       Rebuilds RAMdisk and halts SSD/HDD."
 		echo "       rfsrd --stop"
 		echo "       Rebuilds SSD/HDD and halts RAMdisk."
+		echo "       rfsrd --active"
+		echo "       Shows which device is active."
 		let i=i+1
 		;;
 		--start)
@@ -53,6 +59,10 @@ while [ $i -lt 1 ]; do
 					fi
 			done
 		echo Done rebuilding SSD/HDD.
+		let i=i+1
+		;;
+		--active)
+		echo $(mdadm -D $md | tail -n 2) | sed 's/sync /\n/' | sed -n '2p' | sed 's/ -/\n/' | sed -n '1p'
 		let i=i+1
 		;;
 		*)
