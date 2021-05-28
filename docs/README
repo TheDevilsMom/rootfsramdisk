@@ -1,0 +1,68 @@
+### / in RAM, first release (0.0.1)
+### Caution! Entering this is probably Gentoo-is-for-ricers territory! ;-)
+### Battery backed system (notebook, UPS) strongly recommended!
+### This has been executed on a Thinkpad T480s, 40 GB RAM, NVMe SSD, BIOS boot.
+
+## Section 1: Initial setup. Tested on Funtoo Linux 1.4, probably works with Gentoo also right out of the box, but I didn't test that yet.
+
+# Boot Funtoo Undead USB or any other suitable Linux distro.
+
+# Create tmpfs mount point.
+mkdir /mnt/tmpfs	
+
+# Mount tmpfs. Adjust size to your needs. 16 GiB is probably the absolute minimum for a usable desktop configuration.
+mount -t tmpfs -o size=24576M tmpfs /mnt/tmpfs/		
+
+# Enter tmpfs.
+cd /mnt/tmpfs/
+
+# Fill container with zeros.
+dd if=/dev/zero of=loop bs=1M		
+
+# Setup loop device.
+losetup /dev/loop0 /mnt/tmpfs/loop
+
+# Create /boot and RAID partitions on non volatile storage, e.g. /dev/sda1 (/boot) and /dev/sda2 (/). DON'T ACCIDENTALLY FRY ANY EXISTING OS! Use lsblk to see
+# what block device you are dealing with.
+
+# Create MD device, replace /dev/nvme0n1p2 with your actual SSD/HDD RAID1 partition.
+mdadm --create /dev/md0 /dev/loop0 /dev/nvme0n1p2 --level=1 --raid-devices=2
+
+# Disable SSD/HDD
+mdadm -f /dev/md0 /dev/nvme0n1p2 && mdadm --manage -r /dev/md0 /dev/nvme0n1p2
+
+# Follow on with chapter 5 Funtoo install guide: https://www.funtoo.org/Install/Creating_Filesystems.
+
+...
+
+# /etc/fstab for my particular minimalistic test system. Get the UUIDs from blkid output, or use /dev/xxx or labels, whatever...
+UUID=91c884e5-bd41-4c0e-b1bf-b68fe6317abd	/boot	ext2	noauto,noatime	1 2
+UUID=3e84cb4c-8b13-4cbc-ac3d-7bd9ca56a00d	/	xfs	noatime		0 1
+
+# Add domdadm to the kernel parameters in /etc/boot.conf
+
+# Create /mnt/tmpfs
+mkdir /mnt/tmpfs
+
+# After exiting the chroot, rebuild the array.
+mdadm --manage -a /dev/md0 /dev/nvme0n1p2
+
+# Wait until this shows "state: clean".
+mdadm -D /dev/md0
+
+# Stop loop device.
+losetup -D /dev/loop0
+
+# Unmount everything and reboot.
+
+
+## Section 2: Using rfsrd to start/stop/monitor (needs root, of course).
+
+# Move / from non volatile storage to RAM disk. Do that after booting (that's obvious?!).
+rfsrd --start
+
+# Move / from RAM disk to non volatile storage. Do that before shutting down (that's obvious too?!).
+rfsrd --stop
+
+# Show which device is active.
+rfsrd --active

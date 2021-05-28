@@ -12,6 +12,9 @@ md=/dev/md127
 ssdhdd=/dev/nvme0n1p2
 # Loop device. Change this, if there's something else occupying /dev/loop0.
 loopdevice=/dev/loop0
+# Mount point for tmpfs
+tmpfs=/mnt/tmpfs
+
 # Configuration ends.
 
 i=0
@@ -53,6 +56,8 @@ while [ $i -lt 1 ]; do
 				sleep 5
 					if [ -z "$(mdadm -D $md | grep 'Rebuild Status')" ]; then
 						mdadm -f $md $loopdevice; mdadm --manage -r $md $loopdevice
+						losetup -d $loopdevice
+						umount $tmpfs
 						let k=k+1
 					else
 						echo "doing nothing" > /dev/null
