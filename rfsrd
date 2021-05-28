@@ -1,7 +1,7 @@
 #!/bin/bash
 # Copyright (c) 2021 TheDevilsMom
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 # Configuration begins (example).
 # tmpfs size in MiB. Change this, especially on low mem systems (<32 GiB) without swap to avoid OOM
