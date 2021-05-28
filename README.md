@@ -1,5 +1,5 @@
 # rootfsramdisk
-Scripts to put your Linux (currently being developed for OpenRC based distros) rootfs into a tmpfs
+Script(s) to put your Linux (currently being developed for OpenRC based distros) rootfs into a tmpfs.
 
 How to set up your system (at this time tested with Funtoo Linux 1.4):
 
